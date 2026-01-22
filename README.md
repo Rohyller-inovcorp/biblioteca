@@ -5,32 +5,26 @@ Este é um sistema de gestão de biblioteca desenvolvido com Laravel 11, Jetstre
 Segue estes passos para configurar o projeto no teu ambiente local:
 
 1. Clonar o Repositório
-Bash
 
 git clone https://github.com/Rohyller-inovcorp/biblioteca.git
 cd biblioteca
 2. Instalar Dependências
 Instala as bibliotecas de PHP (Backend) e JavaScript (Frontend):
 
-Bash
 
 composer install
 npm install
 3. Configuração do Ambiente
 Cria o teu ficheiro de configuração a partir do exemplo:
 
-Bash
-
 copy .env.example .env
 Gera a chave de segurança da aplicação:
 
-Bash
 
 php artisan key:generate
 4. Base de Dados (MySQL)
 Cria a base de dados no teu MySQL:
 
-SQL
 
 CREATE DATABASE biblioteca;
 No teu ficheiro .env, configura as credenciais de acesso:
@@ -45,13 +39,11 @@ DB_USERNAME=root
 DB_PASSWORD=
 Executa as migrações para criar as tabelas:
 
-Bash
 
 php artisan migrate
 5. Links de Armazenamento
 Para que as imagens das capas, fotos e logótipos fiquem visíveis, cria o link simbólico:
 
-Bash
 
 php artisan storage:link
 🛠️ Execução do Projeto
@@ -59,12 +51,10 @@ Para colocar o sistema a funcionar, deves abrir dois terminais em simultâneo:
 
 Terminal 1 (Compilação do Frontend):
 
-Bash
 
 npm run dev
 Terminal 2 (Servidor Local):
 
-Bash
 
 php artisan serve
 ✨ Funcionalidades Principais
