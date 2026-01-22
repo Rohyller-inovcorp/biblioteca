@@ -8,10 +8,9 @@ class Publisher extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'logo', 'notes'];
+    protected $fillable = ['name', 'logo'];
 
     protected $casts = [
-        'notes' => 'encrypted',
         'logo' => 'encrypted',
     ];
 
