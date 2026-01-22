@@ -155,11 +155,6 @@ O sistema está protegido por autenticação. Para começar a utilizar:
 
 ---
 
-## 📝 Licença
-
-Este projeto está sob a licença MIT.
-
----
 
 ## 👨‍💻 Autor
 
