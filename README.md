@@ -155,7 +155,121 @@ O sistema está protegido por autenticação. Para começar a utilizar:
 
 ---
 
+🔐 Sistema de Permissões e Requisições
 
+O sistema implementa um controlo de permissões baseado em roles, bem como um fluxo completo de requisição de livros, com validações, histórico e notificações.
+
+👥 Roles de Utilizador
+
+Existem dois tipos de utilizadores na aplicação:
+
+Admin
+
+Cidadão
+
+Admin
+
+Podem criar, editar e eliminar livros
+
+Podem ver todas as requisições
+
+Podem confirmar a devolução dos livros
+
+Podem criar novos utilizadores Admin
+
+Recebem notificações por email sempre que é feita uma requisição
+
+Cidadão
+
+Podem requisitar livros disponíveis
+
+Apenas podem ver as suas próprias requisições
+
+Recebem confirmação e lembretes por email
+
+Ao registarem-se na aplicação, ficam automaticamente com o role de Cidadão
+
+📚 Sistema de Requisições de Livros
+
+Existe um menu “Requisições”, acessível tanto a Admin como a Cidadãos
+
+Apenas é possível requisitar livros que não estejam já em processo de requisição
+
+Cada Cidadão pode ter no máximo 3 livros requisitados em simultâneo
+
+As requisições têm uma numeração sequencial
+
+A duração padrão de cada requisição é de 5 dias
+
+A data prevista de entrega é calculada automaticamente
+
+Validações Importantes
+
+O sistema valida se o livro está disponível antes de permitir a requisição
+
+Caso o livro não esteja disponível, a requisição é bloqueada
+
+No catálogo público, é visível se o livro está disponível ou não
+
+No detalhe e na listagem dos livros existe um botão “Requisitar” quando aplicável
+
+📊 Histórico e Visibilidade
+
+No detalhe do livro é possível ver:
+
+Histórico de requisições ativas e passadas
+
+No detalhe do Cidadão é possível ver:
+
+Histórico completo das suas requisições
+
+Os Cidadãos apenas veem as suas requisições
+
+Os Admin veem todas as requisições do sistema
+
+📬 Emails e Notificações
+
+Sempre que uma requisição é feita:
+
+É enviado um email de confirmação para:
+
+O Cidadão
+
+Todos os Admin
+
+O email inclui:
+
+Dados da requisição
+
+Datas
+
+Capa do livro
+
+No dia anterior à data de entrega, o Cidadão recebe um lembrete automático por email
+
+📦 Devolução de Livros
+
+A devolução do livro é confirmada por um Admin
+
+O Admin regista:
+
+A data real de entrega
+
+O número de dias decorridos
+
+Estes dados ficam guardados no histórico da requisição
+
+📈 Indicadores no Menu de Requisições
+
+Na parte superior do menu de requisições são apresentados indicadores em tempo real:
+
+📌 Número de Requisições Ativas
+
+📆 Requisições efetuadas nos últimos 30 dias
+
+📕 Livros entregues hoje
+
+---
 ## 👨‍💻 Autor
 
 Desenvolvido por **Rohyller** - [GitHub](https://github.com/Rohyller-inovcorp)
