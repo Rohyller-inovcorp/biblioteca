@@ -155,7 +155,7 @@ O sistema está protegido por autenticação. Para começar a utilizar:
 
 ---
 
-🔐 Sistema de Permissões e Requisições
+## 🔐 Sistema de Permissões e Requisições
 
 O sistema implementa um controlo de permissões baseado em roles, bem como um fluxo completo de requisição de livros, com validações, histórico e notificações.
 
@@ -189,7 +189,9 @@ Recebem confirmação e lembretes por email
 
 Ao registarem-se na aplicação, ficam automaticamente com o role de Cidadão
 
-📚 Sistema de Requisições de Livros
+---
+
+## 📚 Sistema de Requisições de Livros
 
 Existe um menu “Requisições”, acessível tanto a Admin como a Cidadãos
 
@@ -213,7 +215,9 @@ No catálogo público, é visível se o livro está disponível ou não
 
 No detalhe e na listagem dos livros existe um botão “Requisitar” quando aplicável
 
-📊 Histórico e Visibilidade
+---
+
+## 📊 Histórico e Visibilidade
 
 No detalhe do livro é possível ver:
 
@@ -227,7 +231,9 @@ Os Cidadãos apenas veem as suas requisições
 
 Os Admin veem todas as requisições do sistema
 
-📬 Emails e Notificações
+---
+
+## 📬 Emails e Notificações
 
 Sempre que uma requisição é feita:
 
@@ -246,6 +252,9 @@ Datas
 Capa do livro
 
 No dia anterior à data de entrega, o Cidadão recebe um lembrete automático por email
+
+
+---
 
 📦 Devolução de Livros
 
