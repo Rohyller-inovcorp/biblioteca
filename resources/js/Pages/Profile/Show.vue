@@ -46,11 +46,6 @@ const logout = () => {
 
                 <LogoutOtherBrowserSessionsForm :sessions="sessions" class="mt-10 sm:mt-0" />
 
-                <template v-if="$page.props.jetstream.hasAccountDeletionFeatures">
-                    <SectionBorder />
-
-                    <DeleteUserForm class="mt-10 sm:mt-0" />
-                </template>
                 <div class="flex items-center gap-4 pt-2 mt-2">
                     <span class="text-md text-gray-400">Deseja sair da aplicação?</span>
                     <button @click="logout" class="btn btn-error btn-sm p-2">

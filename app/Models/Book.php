@@ -4,6 +4,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Publisher;
 use App\Models\Author;
+use App\Models\Loan;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 class Book extends Model
 {
 
@@ -18,5 +20,9 @@ class Book extends Model
     public function authors()
     {
         return $this->belongsToMany(Author::class);
+    }
+    public function loans(): HasMany
+    {
+        return $this->hasMany(Loan::class);
     }
 }

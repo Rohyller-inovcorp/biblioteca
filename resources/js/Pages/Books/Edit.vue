@@ -20,7 +20,6 @@ const form = useForm({
     publisher_id: props.book.publisher_id || null,
     bibliography: props.book.bibliography || '',
     price: props.book.price || '',
-    // Aquí transformamos los autores seleccionados a objetos completos
     authors: props.book.authors
         ? props.book.authors.map(a => ({ id: a.id, name: a.name }))
         : [],
@@ -36,7 +35,6 @@ function submit() {
     data.append('bibliography', form.bibliography)
     data.append('price', form.price)
 
-    // Enviamos solo los IDs de los autores al backend
     form.authors.forEach(author => data.append('authors[]', author.id))
 
     if (form.cover_image) data.append('cover_image', form.cover_image)

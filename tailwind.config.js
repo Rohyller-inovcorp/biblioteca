@@ -42,7 +42,6 @@ export default {
                     "neutral-focus": "#2a2e37",
                     "neutral-content": "#ffffff",
 
-                    /* Otros botones DaisyUI */
                     "info": "#2094f3",
                     "info-focus": "#0c7cd5",
                     "info-content": "#ffffff",

@@ -3,12 +3,30 @@ import { router, Link, Head } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const props = defineProps({
-    title: String,      // Ej: "Autores"
-    data: Object,       // coleçao
-    columns: Array,     // configuração das colunas
-    filters: Object,    // Filtros atuales (search, sortBy, sortDir)
-    baseRoute: String,  // Ej: "authors"
+    title: String,
+    data: Object,
+    columns: Array,
+    filters: Object,
+    baseRoute: String,
+    rowRoute: {
+        type: String,
+        default: null
+    },
+    clickableColumns: {
+        type: Array,
+        default: () => []
+    }
 })
+
+const navigateDetail = (id) => {
+    if (props.rowRoute) {
+        router.visit(route(props.rowRoute, id))
+    }
+}
+
+const isColumnClickable = (columnKey) => {
+    return props.clickableColumns.length === 0 || props.clickableColumns.includes(columnKey)
+}
 
 function sort(column) {
     const dir = props.filters.sortBy === column && props.filters.sortDir === 'asc'
@@ -35,6 +53,7 @@ function deleteItem() {
         onSuccess: () => showDeleteModal.value = false,
     })
 }
+
 function goToPage(link) {
     if (link.url) {
         router.visit(link.url, {
@@ -47,17 +66,22 @@ function goToPage(link) {
 </script>
 
 <template>
-
     <Head :title="title" />
 
     <div class="p-6 w-full max-w-full">
         <h1 class="text-2xl font-bold mb-4">Gestão de {{ title }}</h1>
 
-        <div class="flex flex-wrap gap-4 mb-4 items-center">
-            <Link :href="route(`${baseRoute}.create`)" class="btn btn-primary">Criar {{ title }}</Link>
-
-            <div class="flex-1">
+        <div class="flex flex-wrap gap-4 mb-4 items-center justify-between">
+            <div class="flex gap-4">
+                <div v-if="$page.props.auth.user?.role === 'admin'">
+                    <Link :href="route(`${baseRoute}.create`)" class="btn btn-primary w-28">Criar {{ title }}</Link>
+                </div>
+            
                 <slot name="search-input"></slot>
+            </div>
+            
+            <div>
+                <slot name="loans"></slot>
             </div>
         </div>
 
@@ -68,18 +92,26 @@ function goToPage(link) {
                     <tr>
                         <th v-for="col in columns" :key="col.key"
                             :class="[col.width, { 'cursor-pointer select-none': col.sortable }]"
-                            @click="col.sortable ? sort(col.key) : null">
-                            {{ col.label }}
+                            @click="col.sortable ? sort(col.key) : null"> {{ col.label }}
                             <span v-if="filters.sortBy === col.key">
                                 {{ filters.sortDir === 'asc' ? '↑' : '↓' }}
                             </span>
                         </th>
-                        <th>Ações</th>
+                        <th v-if="$page.props.auth.user.role === 'admin'">Operações</th>
+                        <th v-if="$page.props.auth.user.role === 'admin'">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr v-for="item in data.data" :key="item.id">
-                        <td v-for="col in columns" :key="col.key" :class="col.width">
+                        <td v-for="col in columns" :key="col.key" 
+                            :class="[
+                                col.width,
+                                { 
+                                    'cursor-pointer hover:bg-base-200 transition-colors': rowRoute && isColumnClickable(col.key),
+                                }
+                            ]"
+                            @click="rowRoute && isColumnClickable(col.key) ? navigateDetail(item.id) : null">
+                            
                             <template v-if="col.type === 'image'">
                                 <img v-if="item[col.key]" :src="`/storage/${item[col.key]}`"
                                     class="w-48 h-48 object-cover rounded" />
@@ -104,44 +136,51 @@ function goToPage(link) {
                                 {{ col.format === 'price' ? Number(item[col.key]).toFixed(2) + ' €' : item[col.key] }}
                             </template>
                         </td>
-                        <td class="flex-col gap-3 ">
-                            <Link :href="route(`${baseRoute}.edit`, item.id)" class="btn btn-primary w-20">Editar</Link>
+                        <td class="flex-col gap-3">
+                            <slot name="extra_actions" :item="item"></slot>
+                        </td>
+                        <td class="flex-col gap-3" v-if="$page.props.auth.user?.role === 'admin'">
+                            <Link :href="route(`${baseRoute}.edit`, item.id)" class="btn btn-primary w-20">Editar
+                            </Link>
                             <button @click="confirmDelete(item)" class="btn btn-error w-20 mt-3">Apagar</button>
                         </td>
                     </tr>
                 </tbody>
             </table>
-            <p>
-                <template v-if="data.data && data.data.length === 0">
-                    Nenhum resultado encontrado.
-                </template>
-                <template v-else-if="!data.data">
-                    Carregando...
-                </template>
-            </p>
-            <div v-if="data.links && data.links.length > 3"
-                class="mt-6 flex flex-col items-center justify-center gap-6 p-4 w-full">
-                <div class="text-sm text-gray-600 text-center">
-                    <span class="font-semibold">{{ data.to || 0 }}</span> de
-                    <span class="font-semibold">{{ data.total }}</span> resultados
-                </div>
-
-                <nav class="flex flex-wrap justify-center gap-1">
-                    <button v-for="(link, index) in data.links" :key="index" @click="goToPage(link)"
-                        class="px-3 py-1 text-sm rounded-md transition-all duration-200 border" :class="{
-                            'bg-primary text-white border-primary shadow-md': link.active,
-                            'bg-white text-gray-700 hover:bg-gray-50 border-gray-300': !link.active && link.url,
-                            'text-gray-300 border-gray-100 cursor-not-allowed': !link.url
-                        }" :disabled="!link.url || link.active" v-html="link.label">
-                    </button>
-                </nav>
-            </div>
         </div>
+        
+        <p>
+            <template v-if="data.data && data.data.length === 0">
+                Nenhum resultado encontrado.
+            </template>
+            <template v-else-if="!data.data">
+                Carregando...
+            </template>
+        </p>
+        
+        <div v-if="data.links && data.links.length > 3"
+            class="mt-6 flex flex-col items-center justify-center gap-6 p-4 w-full">
+            <div class="text-sm text-gray-600 text-center">
+                <span class="font-semibold">{{ data.to || 0 }}</span> de
+                <span class="font-semibold">{{ data.total }}</span> resultados
+            </div>
 
+            <nav class="flex flex-wrap justify-center gap-1">
+                <button v-for="(link, index) in data.links" :key="index" @click="goToPage(link)"
+                    class="px-3 py-1 text-sm rounded-md transition-all duration-200 border" :class="{
+                        'bg-primary text-white border-primary shadow-md': link.active,
+                        'bg-white text-gray-700 hover:bg-gray-50 border-gray-300': !link.active && link.url,
+                        'text-gray-300 border-gray-100 cursor-not-allowed': !link.url
+                    }" :disabled="!link.url || link.active" v-html="link.label">
+                </button>
+            </nav>
+        </div>
+        
         <div v-if="showDeleteModal" class="modal modal-open">
             <div class="modal-box">
                 <h3 class="font-bold text-lg">Confirmar eliminação</h3>
                 <p class="py-4">Tem a certeza que deseja eliminar este registro?</p>
+
                 <div class="modal-action">
                     <button class="btn btn-error p-2 mr-2" @click="deleteItem">Sim, eliminar</button>
                     <button class="btn btn-outline" @click="showDeleteModal = false">Cancelar</button>

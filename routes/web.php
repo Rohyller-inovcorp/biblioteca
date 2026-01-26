@@ -9,23 +9,40 @@ use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PublisherController;
 use App\Http\Controllers\BookExportController;
-
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\LoanController;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
-
 
 Route::middleware([
     'auth:sanctum',
     config('jetstream.auth_session'),
     'verified',
 ])->group(function () {
+
     Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
-    Route::get('books/export', [BookExportController::class, 'export'])->name('books.export');
-    Route::resource('books', BookController::class);
-    Route::resource('authors', AuthorController::class);
-    Route::resource('publishers', PublisherController::class);
-});
+    // (show lists)
+    Route::get('books', [BookController::class, 'index'])->name('books.index');
+    Route::get('authors', [AuthorController::class, 'index'])->name('authors.index');
+    Route::get('publishers', [PublisherController::class, 'index'])->name('publishers.index');
+    Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
+    Route::post('/loans', [LoanController::class, 'store'])->name('loans.store');
+    
 
+    // JUST  ADMIN (CRUD)
+    Route::middleware(['admin'])->group(function () {
+        Route::resource('users', UserController::class)->except(['show']);
+
+        Route::get('books/export', [BookExportController::class, 'export'])->name('books.export');
+
+        Route::resource('books', BookController::class)->except(['index']);
+        Route::resource('authors', AuthorController::class)->except(['index', 'show']);
+        Route::resource('publishers', PublisherController::class)->except(['index', 'show']);
+
+       Route::patch('/loans/{loan}', [LoanController::class, 'update'])->name('loans.update');
+    });
+    Route::get(('/users/{user}'), [UserController::class, 'show'])->name('users.show');
+});

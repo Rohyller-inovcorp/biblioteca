@@ -2,11 +2,9 @@
   <div class="drawer">
     <input id="my-drawer" type="checkbox" class="drawer-toggle" v-model="drawerOpen" />
 
-    <!-- Contenido principal (para TODAS las pantallas) -->
     <div class="drawer-content flex flex-col">
       <!-- Navbar -->
       <div class="navbar bg-base-200 shadow-lg">
-        <!-- Botón hamburguesa (solo móvil) -->
         <div class="flex-none lg:hidden">
           <label for="my-drawer" class="btn btn-square btn-ghost">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -46,13 +44,16 @@
                   Editoras
                 </Link>
               </li>
-
+              <li v-if="$page.props.auth.user?.role === 'admin'">
+                <Link :href="route('users.index')" class="flex items-center gap-2 text-lg">
+                  Utilizadores
+                </Link>
+              </li>
               <li>
                 <Link :href="route('profile.show')"
                   class="btn btn-ghost btn-circle avatar placeholder hover:ring-2 hover:ring-primary transition-all"
                   title="Ir para o meu perfil">
-                  <div
-                    class="bg-primary text-primary-content rounded-full w-10 flex items-center justify-center font-bold 
+                  <div class="bg-primary text-primary-content rounded-full w-10 flex items-center justify-center font-bold 
                     text-lg uppercase px-2 text-center">
                     <span>{{ $page.props.auth.user.name.charAt(0) }}</span>
                   </div>
@@ -133,7 +134,11 @@
             </Link>
           </li>
 
-
+          <li v-if="$page.props.auth.user?.role === 'admin'">
+            <Link :href="route('users.index')" class="flex items-center gap-2 text-lg">
+              Utilizadores
+            </Link>
+          </li>
           <li>
             <Link :href="route('profile.show')" class="flex items-center gap-2 text-lg">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
@@ -171,7 +176,6 @@ import { router } from '@inertiajs/vue3';
 
 const drawerOpen = ref(false);
 
-// Cerrar el drawer cuando cambie la página
 router.on('navigate', () => {
   drawerOpen.value = false;
 });

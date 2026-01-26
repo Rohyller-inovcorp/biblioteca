@@ -65,7 +65,7 @@ function submit() {
                 <p v-if="form.errors?.isbn" class="text-red-600 text-sm mt-1">{{ form.errors.isbn }}</p>
             </div>
 
-            <!-- Nombre -->
+            <!-- Nome -->
             <div>
                 <input v-model="form.name" placeholder="Nome" class="input input-bordered w-full" />
                 <p v-if="form.errors?.name" class="text-red-600 text-sm mt-1">{{ form.errors.name }}</p>
@@ -117,7 +117,7 @@ function submit() {
             
             <!-- Botão -->
             <div>
-                <button class="btn btn-primary w-24" :disabled="form.processing">Guardar</button>
+                <button class="btn btn-primary w-24" :disabled="form.processing">Salvar</button>
             </div>
         </form>
     </div>

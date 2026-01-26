@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Author;
 use App\Models\Publisher;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class BookController extends Controller
 {
@@ -16,7 +17,9 @@ class BookController extends Controller
     {
         $search = $request->input('search');
 
-        $books = Book::with(['publisher', 'authors'])
+        $books = Book::with(['publisher', 'authors', 'loans' => function ($query) {
+            $query->whereNull('actual_return_date');
+        }])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('name', 'like', "%{$search}%")
@@ -24,7 +27,7 @@ class BookController extends Controller
                 });
             })
             ->orderBy('created_at', 'desc')
-            ->paginate(3) 
+            ->paginate(3)
             ->withQueryString();
 
         return Inertia::render('Books/Index', [
@@ -34,7 +37,21 @@ class BookController extends Controller
             ],
         ]);
     }
+    public function show(Book $book)
+    {
 
+        $book->load([
+            'loans' => function ($query) {
+                $query->with('user')->latest();
+            },
+            'authors',  
+        ]);
+
+        return inertia('Books/Show', [
+            'book' => $book,
+            'isAdmin' => Auth::user()->role === 'admin'
+        ]);
+    }
     public function create()
     {
         return Inertia::render('Books/Create', [
