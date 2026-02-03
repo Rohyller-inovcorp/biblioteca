@@ -34,5 +34,11 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
-
+    'google_books' => [
+        'api_key' => env('GOOGLE_BOOKS_API_KEY'),
+        'api_url' => env('GOOGLE_BOOKS_API_URL', 'https://www.googleapis.com/books/v1'),
+        'max_results' => 40,
+        'cache_ttl' => 3600,
+        'timeout' => 30
+    ]
 ];

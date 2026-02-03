@@ -10,8 +10,8 @@ class Book extends Model
 {
 
     use HasFactory;
-    protected $fillable = ['isbn', 'name', 'publisher_id', 'bibliography', 'cover_image', 'price'];
-    protected $casts = ['bibliography' => 'encrypted', 'cover_image' => 'encrypted', 'price' => 'decimal:2',];
+    protected $fillable = ['isbn', 'name', 'publisher_id', 'bibliography', 'cover_image', 'price', 'google_books_id', 'google_books_synced_at', 'language', 'published_at'];
+    protected $casts = ['bibliography' => 'encrypted', 'cover_image' => 'encrypted', 'price' => 'decimal:2', 'google_books_synced_at' => 'datetime'];
     public function publisher()
     {
         return $this->belongsTo(Publisher::class);

@@ -66,6 +66,7 @@ function goToPage(link) {
 </script>
 
 <template>
+
     <Head :title="title" />
 
     <div class="p-6 w-full max-w-full">
@@ -76,12 +77,15 @@ function goToPage(link) {
                 <div v-if="$page.props.auth.user?.role === 'admin'">
                     <Link :href="route(`${baseRoute}.create`)" class="btn btn-primary w-28">Criar {{ title }}</Link>
                 </div>
-            
+
                 <slot name="search-input"></slot>
             </div>
-            
+
             <div>
                 <slot name="loans"></slot>
+                <Link :href="route('books.google.search')" class="btn btn-primary w-40 ml-4" v-if="$page.props.auth.user?.role === 'admin'">
+                    Importar Google
+                </Link>
             </div>
         </div>
 
@@ -103,15 +107,13 @@ function goToPage(link) {
                 </thead>
                 <tbody>
                     <tr v-for="item in data.data" :key="item.id">
-                        <td v-for="col in columns" :key="col.key" 
-                            :class="[
-                                col.width,
-                                { 
-                                    'cursor-pointer hover:bg-base-200 transition-colors': rowRoute && isColumnClickable(col.key),
-                                }
-                            ]"
-                            @click="rowRoute && isColumnClickable(col.key) ? navigateDetail(item.id) : null">
-                            
+                        <td v-for="col in columns" :key="col.key" :class="[
+                            col.width,
+                            {
+                                'cursor-pointer hover:bg-base-200 transition-colors': rowRoute && isColumnClickable(col.key),
+                            }
+                        ]" @click="rowRoute && isColumnClickable(col.key) ? navigateDetail(item.id) : null">
+
                             <template v-if="col.type === 'image'">
                                 <img v-if="item[col.key]" :src="`/storage/${item[col.key]}`"
                                     class="w-48 h-48 object-cover rounded" />
@@ -148,7 +150,7 @@ function goToPage(link) {
                 </tbody>
             </table>
         </div>
-        
+
         <p>
             <template v-if="data.data && data.data.length === 0">
                 Nenhum resultado encontrado.
@@ -157,7 +159,7 @@ function goToPage(link) {
                 Carregando...
             </template>
         </p>
-        
+
         <div v-if="data.links && data.links.length > 3"
             class="mt-6 flex flex-col items-center justify-center gap-6 p-4 w-full">
             <div class="text-sm text-gray-600 text-center">
@@ -175,7 +177,7 @@ function goToPage(link) {
                 </button>
             </nav>
         </div>
-        
+
         <div v-if="showDeleteModal" class="modal modal-open">
             <div class="modal-box">
                 <h3 class="font-bold text-lg">Confirmar eliminação</h3>

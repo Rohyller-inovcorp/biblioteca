@@ -31,13 +31,16 @@ Route::middleware([
     Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
     Route::post('/loans', [LoanController::class, 'store'])->name('loans.store');
     
-
+    Route::get('/phpinfo', function () {
+    phpinfo();
+});
     // JUST  ADMIN (CRUD)
     Route::middleware(['admin'])->group(function () {
         Route::resource('users', UserController::class)->except(['show']);
 
         Route::get('books/export', [BookExportController::class, 'export'])->name('books.export');
-
+        Route::get('/books/google-search', [BookController::class, 'googleSearch'])->name('books.google.search');
+        Route::post('/books/google-import', [BookController::class, 'googleImport'])->name('books.google.import');
         Route::resource('books', BookController::class)->except(['index']);
         Route::resource('authors', AuthorController::class)->except(['index', 'show']);
         Route::resource('publishers', PublisherController::class)->except(['index', 'show']);
