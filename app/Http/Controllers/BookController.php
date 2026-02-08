@@ -34,28 +34,206 @@ class BookController extends Controller
             ->paginate(3)
             ->withQueryString();
 
+        $userAlerts = [];
+        $userActiveLoans = [];
+
+        if (Auth::check()) {
+            $userId = Auth::id();
+
+            $userAlerts = \App\Models\BookAlert::where('user_id', $userId)
+                ->where('is_notified', false)
+                ->pluck('book_id')
+                ->toArray();
+
+            $userActiveLoans = \App\Models\Loan::where('user_id', $userId)
+                ->whereNull('actual_return_date')
+                ->pluck('book_id')
+                ->toArray();
+        }
+
         return Inertia::render('Books/Index', [
             'books' => $books,
             'filters' => [
                 'search' => $search
             ],
+            'userAlerts' => $userAlerts,
+            'userActiveLoans' => $userActiveLoans,
         ]);
     }
     public function show(Book $book)
     {
-
         $book->load([
-            'loans' => function ($query) {
-                $query->with('user')->latest();
-            },
             'authors',
+            'loans.user',
         ]);
 
-        return inertia('Books/Show', [
-            'book' => $book,
-            'isAdmin' => Auth::user()->role === 'admin'
+        $approvedReviews = $book->approvedReviews()->with('user')->paginate(5);
+
+        $relatedBooks = collect();
+
+        if ($book->bibliography) {
+
+            $keywords = $this->extractKeywords($book->bibliography);
+
+            if (!empty($keywords)) {
+                $searchTerm = implode(' ', array_slice($keywords, 0, 5));
+
+                $relatedBooks = Book::search($searchTerm)
+                    ->where('id', '!=', $book->id)
+                    ->take(10)
+                    ->get();
+
+            }
+        }
+
+        if ($relatedBooks->count() < 5) {
+            $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $book->name);
+            $titleWords = collect(explode(' ', mb_strtolower($cleanName)))
+                ->filter(fn($word) => strlen($word) > 3)
+                ->values();
+
+            $descKeywords = collect($this->extractKeywords($book->bibliography ?? ''));
+
+            $commonWords = $titleWords->intersect($descKeywords);
+
+            if ($commonWords->isNotEmpty()) {
+                $searchTerm = $commonWords->take(3)->implode(' ');
+
+                $commonBooks = Book::search($searchTerm)
+                    ->where('id', '!=', $book->id)
+                    ->take(5)
+                    ->get();
+
+                $relatedBooks = $relatedBooks->merge($commonBooks)->unique('id');
+            }
+        }
+        if ($relatedBooks->count() < 5) {
+            $cleanName = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $book->name);
+            $titleKeywords = collect(explode(' ', $cleanName))
+                ->filter(fn($word) => strlen($word) > 3)
+                ->take(2)
+                ->implode(' ');
+
+
+            $titleBooks = Book::search($titleKeywords)
+                ->where('id', '!=', $book->id)
+                ->take(5)
+                ->get();
+
+            $relatedBooks = $relatedBooks->merge($titleBooks)->unique('id');
+        }
+
+        if ($relatedBooks->count() < 5 && $book->authors->isNotEmpty()) {
+            $authorName = $book->authors->first()->name;
+
+            $authorBooks = Book::search($authorName)
+                ->where('id', '!=', $book->id)
+                ->take(5)
+                ->get();
+
+            $relatedBooks = $relatedBooks->merge($authorBooks)->unique('id');
+        }
+        if ($relatedBooks->isEmpty()) {
+
+            $relatedBooks = Book::where('id', '!=', $book->id)
+                ->inRandomOrder()
+                ->take(5)
+                ->get();
+
+        }
+        $relatedBooks = $relatedBooks->take(5);
+        $relatedBooks->load('authors');
+
+        $relatedBooksFormatted = $relatedBooks->map(function ($relatedBook) {
+            return [
+                'id' => $relatedBook->id,
+                'name' => $relatedBook->name,
+                'cover_image' => $relatedBook->cover_image,
+                'authors_array' => $relatedBook->authors->pluck('name')->toArray(),
+            ];
+        });
+
+        return Inertia::render('Books/Show', [
+            'book' => array_merge($book->toArray(), [
+                'approved_reviews' => $approvedReviews
+            ]),
+            'relatedBooks' => $relatedBooksFormatted,
         ]);
     }
+
+
+    private function extractKeywords(string $text, int $minLength = 4): array
+    {
+        $text = strtolower($text);
+        $text = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $text);
+
+        $stopwords = [
+            'o',
+            'a',
+            'os',
+            'as',
+            'um',
+            'uma',
+            'de',
+            'do',
+            'da',
+            'dos',
+            'das',
+            'em',
+            'no',
+            'na',
+            'nos',
+            'nas',
+            'por',
+            'para',
+            'com',
+            'sem',
+            'que',
+            'este',
+            'esta',
+            'esse',
+            'essa',
+            'aquele',
+            'aquela',
+            'ser',
+            'estar',
+            'ter',
+            'haver',
+            'fazer',
+            'ir',
+            'vir',
+            'the',
+            'and',
+            'or',
+            'but',
+            'in',
+            'on',
+            'at',
+            'to',
+            'for'
+        ];
+
+        $words = explode(' ', $text);
+
+        $wordCount = [];
+        foreach ($words as $word) {
+            $word = trim($word);
+
+            if (strlen($word) < $minLength || in_array($word, $stopwords)) {
+                continue;
+            }
+
+            if (!isset($wordCount[$word])) {
+                $wordCount[$word] = 0;
+            }
+            $wordCount[$word]++;
+        }
+
+        arsort($wordCount);
+
+        return array_keys($wordCount);
+    }
+
     public function create()
     {
         return Inertia::render('Books/Create', [
@@ -67,7 +245,6 @@ class BookController extends Controller
 
     public function store(Request $request)
     {
-        // Validación
         $data = $request->validate([
             'isbn' => 'required|string|unique:books,isbn',
             'name' => 'required|string',
@@ -150,52 +327,47 @@ class BookController extends Controller
     }
 
     public function googleSearch(Request $request, GoogleBooksService $service)
-{
-    try {
-        $query = trim($request->input('q')); // Siempre limpia espacios
+    {
+        try {
+            $query = trim($request->input('q'));
 
-        Log::info('Google Books Search', [
-            'query' => $query,
-            'user_id' => Auth::id()
-        ]);
+            Log::info('Google Books Search', [
+                'query' => $query,
+                'user_id' => Auth::id()
+            ]);
 
-        if (empty($query)) {
+            if (empty($query)) {
+                return Inertia::render('Books/GoogleSearch', [
+                    'books' => [],
+                    'filters' => ['q' => '']
+                ]);
+            }
+
+            $response = $service->search($query);
+
+            Log::info('Google Books Search Results', [
+                'query' => $query,
+                'status' => $response['status'] ?? 'unknown',
+                'count' => isset($response['data']) ? count($response['data']) : 0
+            ]);
+
+            return Inertia::render('Books/GoogleSearch', [
+                'books'   => $response['data'] ?? [],
+                'filters' => $request->only(['q']),
+                'flash'   => [
+                    'info'  => $response['status'] === 'not_found' ? $response['message'] : null,
+                    'error' => in_array($response['status'], ['error_limit', 'error_api']) ? $response['message'] : null,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error in googleSearch', ['error' => $e->getMessage()]);
+
             return Inertia::render('Books/GoogleSearch', [
                 'books' => [],
-                'filters' => ['q' => '']
-            ]);
+                'filters' => $request->only(['q'])
+            ])->with('error', 'Erro inesperado. Tente novamente.');
         }
-
-        // Llamamos al servicio (que ya tiene los reintentos y lógica de status)
-        $response = $service->search($query);
-
-        Log::info('Google Books Search Results', [
-            'query' => $query,
-            'status' => $response['status'] ?? 'unknown',
-            'count' => isset($response['data']) ? count($response['data']) : 0
-        ]);
-
-        // Manejo de la respuesta según el status
-        return Inertia::render('Books/GoogleSearch', [
-            'books'   => $response['data'] ?? [], // Si no hay datos, enviamos array vacío
-            'filters' => $request->only(['q']),
-            'flash'   => [
-                // Aquí enviamos el mensaje específico a Vue
-                'info'  => $response['status'] === 'not_found' ? $response['message'] : null,
-                'error' => in_array($response['status'], ['error_limit', 'error_api']) ? $response['message'] : null,
-            ]
-        ]);
-
-    } catch (\Exception $e) {
-        Log::error('Error in googleSearch', ['error' => $e->getMessage()]);
-
-        return Inertia::render('Books/GoogleSearch', [
-            'books' => [],
-            'filters' => $request->only(['q'])
-        ])->with('error', 'Erro inesperado. Tente novamente.');
     }
-}
-
     public function googleImport(Request $request, GoogleBooksService $service)
     {
         $validated = $request->validate([
@@ -224,13 +396,13 @@ class BookController extends Controller
 
                 Log::info('Publisher created/found', ['id' => $publisher->id]);
 
-                // Descargar imagen de portada
+
                 $localCoverPath = $this->downloadCoverImage(
                     $data['cover_image'],
                     $data['isbn']
                 );
 
-                // Crear o actualizar libro
+
                 $book = Book::updateOrCreate(
                     ['google_books_id' => $data['google_books_id']],
                     [
@@ -246,7 +418,6 @@ class BookController extends Controller
 
                 Log::info('Book created/updated', ['id' => $book->id]);
 
-                // Procesar autores
                 $authorIds = collect($data['authors_array'])->map(function ($name) {
                     $author = Author::firstOrCreate(['name' => $name]);
                     Log::info('Author created/found', [
@@ -256,7 +427,7 @@ class BookController extends Controller
                     return $author->id;
                 });
 
-                // Sincronizar autores
+
                 $book->authors()->sync($authorIds);
 
                 Log::info('Book import completed successfully', [
@@ -288,7 +459,7 @@ class BookController extends Controller
         try {
             Log::info('Downloading cover image', ['url' => $url]);
 
-            // Intentar obtener el contenido de la imagen
+
             $imageContent = @file_get_contents($url);
 
             if ($imageContent === false) {

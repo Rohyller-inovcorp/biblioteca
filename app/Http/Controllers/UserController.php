@@ -34,7 +34,6 @@ class UserController extends Controller
     {
         $currentUser = Auth::user();
 
-        // Usuario normal: solo puede verse a sí mismo
         if ($currentUser->role !== 'admin' && $currentUser->id !== $user->id) {
             abort(403, 'Você só pode visualizar o seu próprio histórico.');
         }

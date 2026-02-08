@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Storage;
 
 class PublisherController extends Controller
 {
-    // 🔹 Listado con búsqueda, orden y paginación
     public function index(Request $request)
     {
         $search = $request->input('search');
@@ -34,13 +33,11 @@ class PublisherController extends Controller
         ]);
     }
 
-    // 🔹 Página de creación
     public function create()
     {
         return Inertia::render('Publishers/Create');
     }
 
-    // Salvar novo registro
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -57,7 +54,6 @@ class PublisherController extends Controller
         return redirect()->route('publishers.index')->with('success', 'Editora criada com sucesso.');
     }
 
-    // 🔹 Página de edición
     public function edit(Publisher $publisher)
     {
         return Inertia::render('Publishers/Edit', [
@@ -65,7 +61,6 @@ class PublisherController extends Controller
         ]);
     }
 
-    // Atualizar registro
     public function update(Request $request, Publisher $publisher)
     {
         $validated = $request->validate([
@@ -88,7 +83,6 @@ class PublisherController extends Controller
         return redirect()->route('publishers.index')->with('success', 'Editora atualizada com sucesso.');
     }
 
-    // Apagar registro
     public function destroy(Publisher $publisher)
     {
         if ($publisher->books()->exists()) {

@@ -12,11 +12,10 @@ use App\Events\LoanCreated;
 use Illuminate\Support\Facades\Log;
 class LoanController extends Controller
 {
-    // Listar requisições (Admin vê tudo, Cidadão só as dele)
     public function index()
     {
         $user = Auth::user();
-    $query = Loan::with(['user', 'book']);
+        $query = Loan::with(['user', 'book']);
 
     if ($user->role !== 'admin') {
         $query->where('user_id', $user->id);
@@ -32,7 +31,6 @@ class LoanController extends Controller
     ]);
     }
 
-    // Processar a requisição
     public function store(Request $request)
     {
         if (!Auth::check()) {

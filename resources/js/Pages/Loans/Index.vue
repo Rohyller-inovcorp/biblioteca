@@ -70,6 +70,11 @@ const confirmarRececao = () => {
         }
     })
 }
+function goToBook(bookId){
+    router.visit(route('books.show', bookId), {
+        preserveScroll: true,
+    })
+}
 </script>
 
 <template>
@@ -115,14 +120,15 @@ const confirmarRececao = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="loan in allLoans" :key="loan.id" class="hover">
+                        <tr v-for="loan in allLoans" :key="loan.id" class="hover cursor-pointer" 
+                            @click="goToBook(loan.book_id)">
                             <td class="font-mono text-xs font-bold">{{ loan.sequential_number }}</td>
                             <td class="font-bold">{{ loan.book?.name }}</td>
                             <td v-if="$page.props.auth.user.role === 'admin'">{{ loan.user?.name }}</td>
                             <td class="w-20">
                                 <div class="avatar">
                                     <div class="w-32 h-32 rounded-lg">
-                                        <img :src="'/storage/' + (loan.user?.profile_photo_path || 'no_available2.png')" :alt="loan.user?.profile_photo_path" />
+                                        <img :src="'/storage/' + (loan.book?.cover_image || 'no_available2.png')" :alt="loan.user?.cover_image" />
                                     </div>
                                 </div>
                             </td>
@@ -135,7 +141,7 @@ const confirmarRececao = () => {
                                 </div>
                                 <div v-else class="badge badge-warning badge-sm text-[10px] text-white whitespace-nowrap">Em posse</div>
                             </td>
-                            <td v-if="$page.props.auth.user.role === 'admin'">
+                            <td v-if="$page.props.auth.user.role === 'admin'" @click.stop class="cursor-default">
                                 <button 
                                     v-if="!loan.actual_return_date" 
                                     @click="openConfirmModal(loan)" 

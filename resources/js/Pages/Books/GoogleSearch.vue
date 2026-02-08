@@ -33,8 +33,7 @@ const triggerToast = () => {
     }, 3000)
 }
 
-// Lógica de Búsqueda (Google Books)
-// Lógica de Búsqueda (Google Books)
+
 function handleSearch() {
     if (!searchQuery.value.trim()) {
         searchError.value = 'Por favor, insira um termo de busca'

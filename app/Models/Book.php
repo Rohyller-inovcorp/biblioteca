@@ -1,15 +1,18 @@
 <?php
+
 namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Publisher;
 use App\Models\Author;
 use App\Models\Loan;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Laravel\Scout\Searchable;
 class Book extends Model
 {
 
-    use HasFactory;
+    use HasFactory, Searchable;
     protected $fillable = ['isbn', 'name', 'publisher_id', 'bibliography', 'cover_image', 'price', 'google_books_id', 'google_books_synced_at', 'language', 'published_at'];
     protected $casts = ['bibliography' => 'encrypted', 'cover_image' => 'encrypted', 'price' => 'decimal:2', 'google_books_synced_at' => 'datetime'];
     public function publisher()
@@ -24,5 +27,31 @@ class Book extends Model
     public function loans(): HasMany
     {
         return $this->hasMany(Loan::class);
+    }
+    public function approvedReviews()
+    {
+        return $this->hasMany(Review::class)
+            ->where('status', 'approved')
+            ->latest();
+    }
+    public function toSearchableArray(): array
+    {
+        $cleanBibliography = $this->bibliography 
+        ? preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $this->bibliography)
+        : '';
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'bibliography' => $cleanBibliography,
+            'authors' => $this->authors->pluck('name')->toArray(),
+        ];
+    }
+    public function searchableOptions(): array
+    {
+        return [
+            'filterableAttributes' => ['id'], 
+            'searchableAttributes' => ['name', 'bibliography', 'authors'],
+            'sortableAttributes' => ['id'],
+        ];
     }
 }

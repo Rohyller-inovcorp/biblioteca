@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Loan;
+use App\Observers\LoanObserver;
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -27,6 +29,9 @@ class AppServiceProvider extends ServiceProvider
         }
 
         return str_replace(':max', $parameters[0], $message);
+
+        
     });
+    Loan::observe(LoanObserver::class);
     }
 }
