@@ -70,7 +70,7 @@ const confirmLoan = () => {
             if (bookIndex !== -1) {
                 props.books.data[bookIndex].loans = [{ id: 'temp' }];
             }
-            
+
             showLoanModal.value = false;
             showToast("Livro requisitado com sucesso! Verifique seus empréstimos para mais detalhes.", false);
         },
@@ -83,7 +83,8 @@ const confirmLoan = () => {
 
 const confirmAlert = () => {
     alertForm.post(route('book.alerts.subscribe'), {
-        onSuccess: () => {;
+        onSuccess: () => {
+            ;
             showAlertModal.value = false;
             showToast("Confirmado! Vamos avisar assim que o livro estiver disponível.", false);
         },
@@ -93,6 +94,26 @@ const confirmAlert = () => {
         }
     });
 };
+function addToCart(item) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const existing = cart.find(i => i.id === item.id)
+
+    if (existing) {
+        existing.quantity += 1
+    } else {
+        cart.push({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            cover: item.cover_image,
+            quantity: 1
+        })
+    }
+    localStorage.setItem('cart', JSON.stringify(cart))
+    window.dispatchEvent(new Event('cart-updated'))
+    showToast("Livro adicionado ao carrinho", false);
+}
+
 </script>
 
 <template>
@@ -124,6 +145,9 @@ const confirmAlert = () => {
                 <button v-else @click="openAlertModal(item)" class="btn btn-warning btn-xs w-20 text-white font-bold"
                     :disabled="alertForm.processing">
                     Avisar-me
+                </button>
+                <button @click="addToCart(item)" class="mt-4" v-if="$page.props.auth.user?.role != 'admin'">
+                    <span class="text-2xl">🛒</span>
                 </button>
             </div>
         </template>
@@ -177,21 +201,25 @@ const confirmAlert = () => {
         </div>
     </div>
     <div v-if="toastMessage" class="toast toast-top toast-end z-[999] mt-16">
-    <div :class="['alert shadow-lg border-none text-white', isError ? 'alert-error' : 'alert-success']">
-        <div class="flex items-center gap-2">
-            
-            <svg v-if="isError" xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+        <div :class="['alert shadow-lg border-none text-white', isError ? 'alert-error' : 'alert-success']">
+            <div class="flex items-center gap-2">
 
-            <svg v-else xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
+                <svg v-if="isError" xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0"
+                    fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
 
-            <span class="font-bold text-sm">{{ toastMessage }}</span>
-            
-            <button @click="toastMessage = null" class="btn btn-xs btn-circle btn-ghost">✕</button>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0" fill="none"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+
+                <span class="font-bold text-sm">{{ toastMessage }}</span>
+
+                <button @click="toastMessage = null" class="btn btn-xs btn-circle btn-ghost">✕</button>
+            </div>
         </div>
     </div>
-</div>
 </template>

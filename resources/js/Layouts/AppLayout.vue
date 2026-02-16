@@ -3,7 +3,6 @@
     <input id="my-drawer" type="checkbox" class="drawer-toggle" v-model="drawerOpen" />
 
     <div class="drawer-content flex flex-col">
-      <!-- Navbar -->
       <div class="navbar bg-base-200 shadow-lg">
         <div class="flex-none lg:hidden">
           <label for="my-drawer" class="btn btn-square btn-ghost">
@@ -14,12 +13,10 @@
           </label>
         </div>
 
-        <!-- Logo -->
         <div class="flex-1">
           <Link href="/dashboard" class="btn btn-ghost normal-case text-xl">Biblioteca</Link>
         </div>
 
-        <!-- Menú desktop (solo pantallas grandes) -->
         <div class="flex-none hidden lg:block">
           <ul class="menu menu-horizontal px-1">
 
@@ -47,6 +44,11 @@
               <li v-if="$page.props.auth.user?.role === 'admin'">
                 <Link :href="route('reviews.index')" class="flex items-center gap-2 text-lg">
                   Revisões              
+                </Link>
+              </li>
+              <li v-if="$page.props.auth.user?.role === 'admin'">
+                <Link :href="route('orders.index')" class="flex items-center gap-2 text-lg">
+                  Ordenações
                 </Link>
               </li>
               <li v-if="$page.props.auth.user?.role === 'admin'">
@@ -82,9 +84,9 @@
         </div>
       </div>
 
-      <!-- Contenido de la página -->
       <div class="p-4">
         <slot />
+        <CartFloatingButton v-if="shouldShowCart($page)" />
       </div>
     </div>
 
@@ -149,6 +151,11 @@
             </Link>
           </li>
           <li v-if="$page.props.auth.user?.role === 'admin'">
+              <Link :href="route('orders.index')" class="flex items-center gap-2 text-lg">
+                  Ordenações
+              </Link>
+          </li>
+          <li v-if="$page.props.auth.user?.role === 'admin'">
             <Link :href="route('users.index')" class="flex items-center gap-2 text-lg">
               Utilizadores
             </Link>
@@ -187,13 +194,25 @@
 import { Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { router } from '@inertiajs/vue3';
+import CartFloatingButton from '@/Components/CartFloatingButton.vue';
 
 const drawerOpen = ref(false);
 
 router.on('navigate', () => {
   drawerOpen.value = false;
 });
-const logout = () => {
-  router.post(route('logout'));
-};
+const hiddenRoutes = [
+    '/login',
+    '/register',
+    '/forgot-password',
+    '/reset-password',
+    '/verify-email',
+    '/profile'
+]
+function shouldShowCart(page) {
+    if (!page.props.auth.user) return false
+    if (page.props.auth.user.role === 'admin') return false
+
+    return !hiddenRoutes.some(route => page.url.startsWith(route))
+}
 </script>

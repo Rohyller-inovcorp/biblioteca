@@ -13,6 +13,9 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\ReviewedController;
 use App\Http\Controllers\BookAlertController;
+use App\Http\Controllers\CartController;
+use App\Http\Controllers\CheckoutController;
+use App\Http\Controllers\StripeWebhookController;
 Route::get('/', function () {
     return redirect()->route('login');
 });
@@ -39,6 +42,7 @@ Route::middleware([
         Route::patch('/loans/{loan}', [LoanController::class, 'update'])->name('loans.update');
         Route::get('/reviews', [App\Http\Controllers\ReviewedController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{review}', [ReviewedController::class, 'update'])->name('reviews.update');
+        Route::get('/orders/', [App\Http\Controllers\OrdersController::class, 'index'])->name('orders.index');
     });
     // (show lists)
     Route::get('books', [BookController::class, 'index'])->name('books.index');
@@ -53,4 +57,16 @@ Route::middleware([
     Route::get(('/users/{user}'), [UserController::class, 'show'])->name('users.show');
     Route::post('/reviews', [App\Http\Controllers\ReviewedController::class, 'store'])->name('reviews.store');
     Route::post('/book/alert', [BookAlertController::class, 'subscribe'])->name('book.alerts.subscribe');
+
+    // cart
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::get('/checkout/address', [CheckoutController::class, 'address'])->name('checkout.address');
+    Route::post('/checkout/address', [CheckoutController::class, 'storeAddress'])->name('checkout.storeAddress');
+
+    Route::get('/checkout/pay', [CheckoutController::class, 'pay']) ->name('checkout.pay');
+    Route::get('/checkout/success', [CheckoutController::class, 'success'])->name('checkout.success');
+
+    Route::get('/checkout/cancel', [CheckoutController::class, 'cancel'])->name('checkout.cancel');
+
 });
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);

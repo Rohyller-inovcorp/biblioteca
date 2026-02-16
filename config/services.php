@@ -40,5 +40,11 @@ return [
         'max_results' => 40,
         'cache_ttl' => 3600,
         'timeout' => 30
-    ]
+    ],
+    'stripe' => [
+        'secret' => env('STRIPE_SECRET'),
+        'key' => env('STRIPE_KEY'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+    ],
+
 ];

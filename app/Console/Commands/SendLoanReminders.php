@@ -28,11 +28,9 @@ class SendLoanReminders extends Command
     public function handle(): void
     {
         $tomorrow = now()->addDay()->toDateString();
-
-        // Buscar préstamos que vencen mañana y no fueron devueltos
         $loans = Loan::whereDate('expected_return_date', $tomorrow)
             ->whereNull('actual_return_date')
-            ->with('user', 'book') // importante para enviar datos al email
+            ->with('user', 'book') 
             ->get();
 
         foreach ($loans as $loan) {

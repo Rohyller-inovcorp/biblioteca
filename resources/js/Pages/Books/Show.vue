@@ -1,7 +1,8 @@
 <script setup>
 import { Head, Link, router, usePage } from '@inertiajs/vue3'
 import { computed, ref } from 'vue';
-
+const toastTimer = ref(null);
+const toastMessage = ref(null)
 const props = defineProps({
     book: Object,
     isAdmin: Boolean,
@@ -88,6 +89,39 @@ function next() {
 function goToBook(bookId) {
     router.visit(`/books/${bookId}`)
 }
+const showToast = (message, errorStatus = false, duration = 4000) => {
+    if (toastTimer.value) {
+        clearTimeout(toastTimer.value);
+    }
+
+    toastMessage.value = message;
+    isError.value = errorStatus;
+
+    toastTimer.value = setTimeout(() => {
+        toastMessage.value = null;
+        toastTimer.value = null;
+    }, duration);
+};
+
+function addToCart(item) {
+    let cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const existing = cart.find(i => i.id === item.id)
+
+    if (existing) {
+        existing.quantity += 1
+    } else {
+        cart.push({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            cover: item.cover, 
+            quantity: 1
+        })
+    }
+    localStorage.setItem('cart', JSON.stringify(cart))
+    window.dispatchEvent(new Event('cart-updated'))
+    showToast("Livro adicionado ao carrinho", false);
+}
 </script>
 
 <template>
@@ -124,7 +158,11 @@ function goToBook(bookId) {
                             Price: {{ Number(book.price).toFixed(2) }} €
                         </span>
                     </div>
-
+                    <div class="mt-4" v-if="$page.props.auth.user?.role != 'admin'">
+                        <button @click="addToCart(book)" class="mt-4 text-gray-700" >
+                            Adicionar ao carrinho<span class="text-2xl"> 🛒</span>
+                        </button>
+                    </div>
                     <div class="divider"></div>
 
                     <div class="flex items-center gap-4">
@@ -345,6 +383,28 @@ function goToBook(bookId) {
                         Enviar Review
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div v-if="toastMessage" class="toast toast-top toast-end z-[999] mt-16">
+        <div :class="['alert shadow-lg border-none text-white', isError ? 'alert-error' : 'alert-success']">
+            <div class="flex items-center gap-2">
+
+                <svg v-if="isError" xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0"
+                    fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="stroke-current h-6 w-6 shrink-0" fill="none"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+
+                <span class="font-bold text-sm">{{ toastMessage }}</span>
+
+                <button @click="toastMessage = null" class="btn btn-xs btn-circle btn-ghost">✕</button>
             </div>
         </div>
     </div>
