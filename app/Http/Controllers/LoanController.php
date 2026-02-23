@@ -3,13 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Loan;
-use App\Models\Book;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use App\Events\LoanCreated;
-use Illuminate\Support\Facades\Log;
+use App\Services\LogService;
+
 class LoanController extends Controller
 {
     public function index()
@@ -17,18 +16,18 @@ class LoanController extends Controller
         $user = Auth::user();
         $query = Loan::with(['user', 'book']);
 
-    if ($user->role !== 'admin') {
-        $query->where('user_id', $user->id);
-    }
+        if ($user->role !== 'admin') {
+            $query->where('user_id', $user->id);
+        }
 
-    return Inertia::render('Loans/Index', [
-        'loans' => $query->latest()->paginate(15), 
-        'stats' => [
-            'active' => Loan::whereNull('actual_return_date')->count(),
-            'last_30_days' => Loan::where('loan_date', '>=', now()->subDays(30))->count(),
-            'delivered_today' => Loan::whereDate('actual_return_date', today())->count(),
-        ]
-    ]);
+        return Inertia::render('Loans/Index', [
+            'loans' => $query->latest()->paginate(15),
+            'stats' => [
+                'active' => Loan::whereNull('actual_return_date')->count(),
+                'last_30_days' => Loan::where('loan_date', '>=', now()->subDays(30))->count(),
+                'delivered_today' => Loan::whereDate('actual_return_date', today())->count(),
+            ]
+        ]);
     }
 
     public function store(Request $request)
@@ -41,6 +40,13 @@ class LoanController extends Controller
         ]);
 
         $user = Auth::user();
+        $book = \App\Models\Book::findOrFail($request->book_id);
+
+        if ($book->stock <= 0) {
+            return back()->withErrors([
+                'message' => 'Livro sem stock disponivel.'
+            ]);
+        }
 
         $activeLoansCount = \App\Models\Loan::where('user_id', $user->id)
             ->whereNull('actual_return_date')
@@ -64,9 +70,9 @@ class LoanController extends Controller
                 'loan_date'            => now(),
                 'expected_return_date' => now()->addDays(5),
             ]);
+            LogService::registrar(modulo: 'loans', objetoId: $loan->id, alteracao: 'Criou uma nova requisição de livro');
             event(new LoanCreated($loan, $user));
             return back()->with('success', 'Livro requisitado com sucesso!');
-         
         } catch (\Exception $e) {
             return back()->withErrors(['error' => 'Erro ao processar: ' . $e->getMessage()]);
         }
@@ -84,5 +90,10 @@ class LoanController extends Controller
         $loan->save();
 
         return back()->with('success', 'Livro recebido! O cidadão já pode requisitar outro.');
+    }
+    public function return(Loan $loan)
+    {
+        $loan->update(['actual_return_date' => now(),]);
+        return back()->with('success', 'Livro devolvido com sucesso!');
     }
 }

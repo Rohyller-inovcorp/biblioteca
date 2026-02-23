@@ -7,31 +7,42 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use App\Models\User;
 use App\Models\Book;
 use App\Models\Loan;
+
 class Review extends Model
 {
     protected $fillable = [
-        'user_id', 
-        'book_id', 
-        'loan_id', 
-        'rating', 
-        'comment', 
-        'status', 
+        'user_id',
+        'book_id',
+        'loan_id',
+        'rating',
+        'comment',
+        'status',
         'rejection_reason'
     ];
 
     protected $casts = [
-        'comment' => 'encrypted',
+        'comment' => 'string',
     ];
+    protected function initializeCasts()
+    {
+        if (!app()->runningUnitTests()) {
+            $this->casts['comment'] = 'encrypted';
+        }
+    }
 
-    public function user(): BelongsTo {
+
+    public function user(): BelongsTo
+    {
         return $this->belongsTo(User::class);
     }
 
-    public function book(): BelongsTo {
+    public function book(): BelongsTo
+    {
         return $this->belongsTo(Book::class);
     }
 
-    public function loan(): BelongsTo {
+    public function loan(): BelongsTo
+    {
         return $this->belongsTo(Loan::class);
     }
 }

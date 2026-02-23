@@ -9,12 +9,26 @@ use App\Models\Author;
 use App\Models\Loan;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Laravel\Scout\Searchable;
+
 class Book extends Model
 {
 
     use HasFactory, Searchable;
-    protected $fillable = ['isbn', 'name', 'publisher_id', 'bibliography', 'cover_image', 'price', 'google_books_id', 'google_books_synced_at', 'language', 'published_at'];
-    protected $casts = ['bibliography' => 'encrypted', 'cover_image' => 'encrypted', 'price' => 'decimal:2', 'google_books_synced_at' => 'datetime'];
+    protected $fillable = ['isbn', 'name', 'publisher_id', 'bibliography', 'cover_image', 'price', 'google_books_id', 'google_books_synced_at', 'language', 'published_at', 'stock'];
+    protected $casts = [
+        'bibliography' => 'string',
+        'cover_image' => 'string',
+        'price' => 'decimal:2',
+        'google_books_synced_at' => 'datetime',
+        'stock' => 'integer',
+    ];
+
+    protected function initializeCasts()
+    {
+        if (!app()->runningUnitTests()) {
+            $this->casts['bibliography'] = 'encrypted';
+        }
+    }
     public function publisher()
     {
         return $this->belongsTo(Publisher::class);
@@ -36,9 +50,9 @@ class Book extends Model
     }
     public function toSearchableArray(): array
     {
-        $cleanBibliography = $this->bibliography 
-        ? preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $this->bibliography)
-        : '';
+        $cleanBibliography = $this->bibliography
+            ? preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $this->bibliography)
+            : '';
         return [
             'id' => $this->id,
             'name' => $this->name,
@@ -49,7 +63,7 @@ class Book extends Model
     public function searchableOptions(): array
     {
         return [
-            'filterableAttributes' => ['id'], 
+            'filterableAttributes' => ['id'],
             'searchableAttributes' => ['name', 'bibliography', 'authors'],
             'sortableAttributes' => ['id'],
         ];

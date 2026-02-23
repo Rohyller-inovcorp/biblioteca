@@ -9,6 +9,7 @@ use App\Models\User;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
+use App\Services\LogService;
 class UserController extends Controller
 {
     public function index(Request $request)
@@ -68,7 +69,11 @@ class UserController extends Controller
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
-
+        LogService::registrar(
+            modulo: 'users',
+            objetoId: Auth::id(),
+            alteracao: 'criou um novo utilizador'
+        );
         return redirect()->route('users.index')->with('success', 'Utilizador criado com sucesso!');
     }
     public function edit(User $user)

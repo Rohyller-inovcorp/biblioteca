@@ -51,6 +51,7 @@ Route::middleware([
     Route::get('publishers', [PublisherController::class, 'index'])->name('publishers.index');
     Route::get('/loans', [LoanController::class, 'index'])->name('loans.index');
     Route::post('/loans', [LoanController::class, 'store'])->name('loans.store');
+    Route::post('/loans/{loan}/return', [LoanController::class, 'return'])->name('loans.return');
     Route::get('/phpinfo', function () {
         phpinfo();
     });

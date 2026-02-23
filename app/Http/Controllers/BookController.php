@@ -13,7 +13,7 @@ use App\Services\GoogleBooks\GoogleBooksService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
-
+use App\Services\LogService;
 class BookController extends Controller
 {
 
@@ -271,7 +271,7 @@ class BookController extends Controller
 
 
         $book->authors()->sync($data['authors']);
-
+        LogService::registrar( modulo: 'livros', objetoId: $book->id, alteracao: 'Criou um novo livro');
         return redirect()->route('books.index')->with('success', 'Livro criado com sucesso.');
     }
 
@@ -430,9 +430,7 @@ class BookController extends Controller
 
                 $book->authors()->sync($authorIds);
 
-                Log::info('Book import completed successfully', [
-                    'book_id' => $book->id
-                ]);
+                LogService::registrar( modulo: 'livros', objetoId: $book->id, alteracao: 'Importação concluída com sucesso' );
 
                 return redirect()
                     ->route('books.index')

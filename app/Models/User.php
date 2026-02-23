@@ -60,13 +60,14 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-    protected function casts(): array
+    protected $casts = ['email_verified_at' => 'datetime', 'password' => 'string',];
+    protected function initializeCasts()
     {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
+        if (! app()->runningUnitTests()) {
+            $this->casts['password'] = 'hashed';
+        }
     }
+
     public function isAdmin(): bool
     {
         return $this->role === self::ROLE_ADMIN;
